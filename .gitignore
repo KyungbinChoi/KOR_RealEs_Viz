@@ -1,0 +1,5 @@
+/postgresql/data/*
+/airflow_job/dags/__pycache__/*
+/airflow_job/logs/*
+.DS_Store
+/plugins/*

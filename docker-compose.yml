@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    restart: always
+    environment:
+      - SUPERSET_SECRET_KEY=mysecretkey
+      - SUPERSET_CONFIG_PATH=/etc/superset/superset_config.py
+      - SQLALCHEMY_DATABASE_URI=postgresql://airflow:airflow@postgres:5432/airflow  # DB 연결 설정 추가
+    ports:
+      - "8088:8088"  # Superset 웹 UI
+    volumes:
+      - ./superset:/etc/superset
+      - superset_data:/var/lib/superset
+    depends_on:
+      postgres:
+        condition: service_healthy  # PostgreSQL이 완전히 실행된 후 시작되도록 설정
+    entrypoint: ["/bin/sh", "-c", "superset db upgrade && superset init && superset run -h 0.0.0.0 -p 8088"]
+
+  postgres:
+    build:
+      context: ./postgresql
+    container_name: postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:  # PostgreSQL이 정상 실행되었는지 확인하는 설정
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  airflow_job:
+    build:
+      context: ./airflow_job  # airflow_job 폴더에서 Dockerfile을 사용
+      dockerfile: Dockerfile
+    container_name: airflow
+    depends_on:
+      postgres:
+        condition: service_healthy  # PostgreSQL이 완전히 실행된 후 시작되도록 설정
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__WEBSERVER__RBAC: "True"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow_job/dags:/opt/airflow/dags
+      - ./airflow_job/logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./airflow_job/dbt:/opt/airflow/dbt
+
+  jupyter:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
+    container_name: jupyter-notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./jupyter/notebooks:/home/jovyan/work
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"  # JupyterLab 인터페이스 활성화
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  superset_data:
