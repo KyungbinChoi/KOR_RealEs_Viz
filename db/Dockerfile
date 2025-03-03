@@ -30,8 +30,7 @@ WORKDIR /app
 
 # 스크립트 및 데이터 복사
 # COPY init.sql /docker-entrypoint-initdb.d/
-COPY load_data.py /app/load_data.py
-COPY data/ /app/data/
+COPY sql/ /app/sql/
 
 # Entrypoint 스크립트 복사
 COPY entrypoint.sh /app/entrypoint.sh

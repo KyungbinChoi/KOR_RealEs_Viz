@@ -14,9 +14,8 @@ RUN apt-get update && apt-get install -y \
 # 작업 디렉토리 설정
 WORKDIR /opt/airflow
 
-# DAG 및 DBT 설정 복사
+# DAG 설정 복사
 COPY dags/ /opt/airflow/dags/
-COPY dbt/ /opt/airflow/dbt/
 
 # Entrypoint 스크립트 복사
 COPY entrypoint.sh /app/entrypoint.sh
