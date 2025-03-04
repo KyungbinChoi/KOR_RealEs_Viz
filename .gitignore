@@ -1,4 +1,6 @@
 /airflow/dags/__pycache__/*
 /airflow/logs/*
+/airflow/dataset/*
 .DS_Store
 /plugins/*
+.env

@@ -42,6 +42,8 @@ services:
       context: ./airflow  # airflow 폴더에서 Dockerfile을 사용
       dockerfile: Dockerfile
     container_name: airflow
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy  # PostgreSQL이 완전히 실행된 후 시작되도록 설정
@@ -55,6 +57,7 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./airflow/scripts:/opt/airflow/scripts
 
   jupyter:
     build:
