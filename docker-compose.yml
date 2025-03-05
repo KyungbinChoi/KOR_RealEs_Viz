@@ -1,24 +1,6 @@
 version: "3.8"
 
 services:
-  superset:
-    image: apache/superset:latest
-    container_name: superset
-    restart: always
-    environment:
-      - SUPERSET_SECRET_KEY=mysecretkey
-      - SUPERSET_CONFIG_PATH=/etc/superset/superset_config.py
-      - SQLALCHEMY_DATABASE_URI=postgresql://airflow:airflow@postgres:5432/airflow  # DB 연결 설정 추가
-    ports:
-      - "8088:8088"  # Superset 웹 UI
-    volumes:
-      - ./superset:/etc/superset
-      - superset_data:/var/lib/superset
-    depends_on:
-      postgres:
-        condition: service_healthy  # PostgreSQL이 완전히 실행된 후 시작되도록 설정
-    entrypoint: ["/bin/sh", "-c", "superset db upgrade && superset init && superset run -h 0.0.0.0 -p 8088"]
-
   postgres:
     build:
       context: ./db
@@ -51,6 +33,11 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__WEBSERVER__RBAC: "True"
+    healthcheck:  # PostgreSQL이 정상 실행되었는지 확인하는 설정
+      test: ["CMD-SHELL", "airflow db check"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - "8080:8080"
     volumes:
@@ -58,6 +45,7 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./airflow/scripts:/opt/airflow/scripts
+      - ./airflow/dataset:/opt/airflow/dataset
 
   jupyter:
     build:
@@ -72,6 +60,32 @@ services:
       JUPYTER_ENABLE_LAB: "yes"  # JupyterLab 인터페이스 활성화
     depends_on:
       - postgres
+      
+  superset:
+    build:
+      context: ./superset
+    container_name: superset
+    restart: always
+    environment:
+      - SUPERSET_ADMIN_USER=admin
+      - SUPERSET_ADMIN_PASSWORD=admin123
+      - SUPERSET_ADMIN_EMAIL=admin@example.com
+      - SUPERSET_SECRET_KEY=mysecretkey
+      - SUPERSET_CONFIG_PATH=/etc/superset/superset_config.py
+      - SQLALCHEMY_DATABASE_URI=postgresql://airflow:airflow@postgres:5432/superset_db
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./superset:/etc/superset
+      - superset_data:/var/lib/superset
+    depends_on:
+      airflow:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "
+      while ! pg_isready -h postgres -U airflow; do sleep 2; done;
+      superset db upgrade &&
+      superset init &&
+      superset run -h 0.0.0.0 -p 8088"]
 
 volumes:
   postgres_data:

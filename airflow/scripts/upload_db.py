@@ -27,22 +27,17 @@ def load_results_to_postgres():
     if not os.path.exists(RESULTS_FILE):
         raise FileNotFoundError(f"{RESULTS_FILE} not found.")
 
-    # pickle 파일 로드
-    with open(RESULTS_FILE, "rb") as f:
-        data = pickle.load(f)
+    # ✅ pandas로 pickle 파일 로드
+    df = pd.read_pickle(RESULTS_FILE)
 
-    # 데이터가 딕셔너리 또는 리스트 형태인지 확인 후 DataFrame 변환
-    if isinstance(data, list):
-        df = pd.DataFrame(data)
-    elif isinstance(data, dict):
-        df = pd.DataFrame([data])  # 단일 딕셔너리라면 행 하나짜리 DataFrame으로 변환
-    else:
-        raise ValueError("Unsupported data format in results.pkl")
+    # ✅ 데이터가 비어 있는지 확인
+    if df.empty:
+        raise ValueError("⚠️ DataFrame is empty. No data to upload.")
 
-    # 데이터베이스에 적재 (기존 데이터 덮어쓰기 옵션 설정)
-    df.to_sql(TABLE_NAME, engine, if_exists="replace", index=False)
+    # ✅ 데이터베이스에 적재 (기존 데이터 덮어쓰기)
+    df.to_sql(TABLE_NAME, engine, if_exists="append", index=False)
 
-    print(f"Data successfully loaded into PostgreSQL table '{TABLE_NAME}'.")
+    print(f"✅ Data successfully loaded into PostgreSQL table '{TABLE_NAME}'.")
 
 if __name__ == "__main__":
     load_results_to_postgres()

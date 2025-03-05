@@ -22,23 +22,23 @@ dag = DAG(
 )
 
 # 실행할 스크립트 경로
-api_script_path = "/opt/airflow/script/monthly_fetching.py"
-upload_script_path = "/opt/airflow/script/upload_db.py"
+api_script_path = "/opt/airflow/scripts/api_fetching.py"
+upload_script_path = "/opt/airflow/scripts/upload_db.py"
 
 # 실행 시점의 날짜(yyyy-mm-dd)를 Airflow 매크로로 전달
 api_fetching_task = BashOperator(
     task_id="run_monthly_script",
-    bash_command=f"python {api_script_path} {{ ds }}",
+    bash_command=f"python3 {api_script_path} " + "{{ ds }}",
     dag=dag,
 )
 
 upload_db_task = BashOperator(
-    task_id="run_monthly_script",
-    bash_command=f"python {upload_script_path}",
+    task_id="run_upload_db_script",
+    bash_command=f"python3 {upload_script_path}",
     dag=dag,
 )
 
-start_dag = EmptyOperator()
-end_dag = EmptyOperator()
+start_dag = EmptyOperator(task_id="start_dag", dag=dag)
+end_dag = EmptyOperator(task_id="end_dag", dag=dag)
 
 start_dag >> api_fetching_task >> upload_db_task >> end_dag

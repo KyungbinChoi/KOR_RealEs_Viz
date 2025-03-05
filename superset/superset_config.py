@@ -1,7 +1,7 @@
 import os
 
 # 1. 데이터베이스 연결 설정 (PostgreSQL)
-SQLALCHEMY_DATABASE_URI = "postgresql://airflow:airflow@postgres:5432/airflow"
+SQLALCHEMY_DATABASE_URI = "postgresql://airflow:airflow@postgres:5432/superset_db"
 
 # 2. 보안 설정
 SECRET_KEY = os.getenv("SUPERSET_SECRET_KEY", "mysecretkey")  # 보안 키 설정

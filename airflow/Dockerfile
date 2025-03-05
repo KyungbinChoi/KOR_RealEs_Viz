@@ -16,11 +16,13 @@ WORKDIR /opt/airflow
 
 # DAG 설정 복사
 COPY dags/ /opt/airflow/dags/
+COPY dataset/ /opt/airflow/dataset/
 COPY scripts/ /opt/airflow/scripts/
 
 # Entrypoint 스크립트 복사
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+RUN chmod -R 777 /opt/airflow/dataset/
 
 USER airflow
 

@@ -29,7 +29,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 
 # 스크립트 및 데이터 복사
-# COPY init.sql /docker-entrypoint-initdb.d/
+COPY init.sql /docker-entrypoint-initdb.d/
 COPY sql/ /app/sql/
 
 # Entrypoint 스크립트 복사

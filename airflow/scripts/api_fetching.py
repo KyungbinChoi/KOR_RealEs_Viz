@@ -6,9 +6,19 @@ import pandas as pd
 import itertools
 import time, os, sys
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from urllib.parse import unquote
 
 base_date = datetime.strptime(sys.argv[1], "%Y-%m-%d")
+update_date = sys.argv[1]
+
+file_path = "/opt/airflow/dataset/results.pkl"
+print(f"Checking file path: {file_path}")
+if os.path.exists(f"/opt/airflow/dataset/results.pkl"):
+    start_date = update_date
+else:
+    start_date = "2020-01-01"
+
 serviceKey = os.getenv("API_KEY")
 
 API_KEY = unquote(serviceKey)
@@ -99,8 +109,9 @@ def get_multiregion_timeseries_df(lawd_cd_list, deal_ymd_list, sleep_time=1):
 
 if __name__ == "__main__":
 
-    update_date = (base_date - timedelta(days=1)).strftime(format = "%Y-%m-%d")
-    deal_ymd_list = get_month_list("2020-01-01", update_date)
+    
+    print(start_date, update_date)
+    deal_ymd_list = get_month_list(start_date, update_date)
 
     # 지역 코드 목록 (서울, 경기)
     region_codes = [
@@ -119,5 +130,5 @@ if __name__ == "__main__":
     smp_timeseries_gyg = get_multiregion_timeseries_df(region_codes2, deal_ymd_list)
 
     results_df = pd.concat([smp_timeseries_seoul,smp_timeseries_gyg]).reset_index(drop=True)
-    results_df.to_pickle("/opt/airflow/dataset/results.pkl")
+    results_df.to_pickle(f"/opt/airflow/dataset/results.pkl")
     print('End Data Fetching & Saving raw data set')

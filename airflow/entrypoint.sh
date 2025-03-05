@@ -5,7 +5,7 @@ set -e
 airflow db init
 
 # 기본 사용자 생성
-airflow users create \
+airflow users list | grep -q admin || airflow users create \
     --username admin \
     --firstname Admin \
     --lastname User \

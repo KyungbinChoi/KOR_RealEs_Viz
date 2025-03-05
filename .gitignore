@@ -3,4 +3,5 @@
 /airflow/dataset/*
 .DS_Store
 /plugins/*
+/superset/__pycache__/*
 .env
